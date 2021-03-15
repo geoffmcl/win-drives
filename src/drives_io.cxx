@@ -18,7 +18,7 @@ TCHAR * Get_Hex_Stg( BYTE * bp, DWORD len )
     *cp = 0;
     if (bp) {
         for (dwi = 0; dwi < len; dwi++) {
-            sprintf(EndBuf(cp),"%02X", (bp[dwi] * 0x0FF));
+            sprintf(EndBuf(cp),"%02X", (bp[dwi] & 0x0FF));
         }
     }
     return cp;
@@ -290,7 +290,7 @@ LPCSTR Media_Type_2_Stg( MEDIA_TYPE mt, int full )
         pmt++;
     }
     PTSTR cp = GetNxtBuf();
-    sprintf(cp,"Value %u, NOT IN LIST", mt);
+    sprintf(cp, "Value %u (%s), NOT IN LIST", mt, Get_Hex_Stg((BYTE*)&mt, sizeof(MEDIA_TYPE)));
     return cp;
 }
 
@@ -320,7 +320,7 @@ LPCSTR Partition_Style_2_Stg( PARTITION_STYLE ps, int full )
         pps++;
     }
     PTSTR cp = GetNxtBuf();
-    sprintf(cp,"Value %u, NOT IN LIST", ps);
+    sprintf(cp, "Value %u (0x%s), NOT IN LIST", ps, Get_Hex_Stg((BYTE*)&ps, sizeof(PARTITION_STYLE)));
     return cp;
 }
 
@@ -431,7 +431,7 @@ DWORD GetLastErrorMsg( PTSTR lpm, DWORD dwLen, DWORD dwErr )
    else
       strcat(lpm, (const char *)lpMsgBuf);
 
-   //	printf("%s:%s\n",lpm,(LPCTSTR)lpMsgBuf);
+   //	SPRTF("%s:%s\n",lpm,(LPCTSTR)lpMsgBuf);
    // Free the buffer.
    if( lpMsgBuf )
       LocalFree( lpMsgBuf );
@@ -467,23 +467,23 @@ void GetDriveGeometries(void)
         sprintf(cp,TEXT("\\\\.\\PhysicalDrive%u"),i);
         bResult = GetDriveGeometry (cp, &pdg, &dwLen);
         if (bResult) {
-            printf("\nDrive: [%s]: %s ", cp, Media_Type_2_Stg(pdg.MediaType,0));
-            printf("Cylinders = %I64d, ", pdg.Cylinders);
-            printf("Tracks/cylinder = %ld, ", (ULONG) pdg.TracksPerCylinder);
-            printf("Sectors/track = %ld, ", (ULONG) pdg.SectorsPerTrack);
-            printf("Bytes/sector = %ld, ", (ULONG) pdg.BytesPerSector);
+            SPRTF("\nDrive: [%s]: %s ", cp, Media_Type_2_Stg(pdg.MediaType,0));
+            SPRTF("Cylinders = %I64d, ", pdg.Cylinders);
+            SPRTF("Tracks/cylinder = %ld, ", (ULONG) pdg.TracksPerCylinder);
+            SPRTF("Sectors/track = %ld, ", (ULONG) pdg.SectorsPerTrack);
+            SPRTF("Bytes/sector = %ld, ", (ULONG) pdg.BytesPerSector);
             DiskSize = pdg.Cylinders.QuadPart * (ULONG)pdg.TracksPerCylinder *
                 (ULONG)pdg.SectorsPerTrack * (ULONG)pdg.BytesPerSector;
-            printf("Size = %I64d (Bytes) = %I64d (Gb)\n", DiskSize,
+            SPRTF("Size = %I64d (Bytes) = %I64d (Gb)\n", DiskSize,
                 DiskSize / (1024 * 1024 * 1024));
         } else {
             DWORD dwErr = GetLastError();
             errb = GetNxtBuf();
             dwLen = GetLastErrorMsg(errb,BUF_MAX-2,dwErr);
             if (dwLen == -1)
-                printf ("\nDrive: [%s] FAILED. Error %ld.\n", cp, dwErr);
+                SPRTF("\nDrive: [%s] FAILED. Error %ld.\n", cp, dwErr);
             else
-                printf ("\nDrive: [%s] FAILED. Error [%s](%ld).\n", cp, errb, dwErr);
+                SPRTF("\nDrive: [%s] FAILED. Error [%s](%ld).\n", cp, errb, dwErr);
 
             failed++;
             if (failed > 1) {
@@ -506,7 +506,7 @@ void GetDriveGeometriesEx(void)
     ULARGE_INTEGER ul1, ul2;
 
     failed = 0;
-    printf("\nUsing IOCTL to get raw drive information...(%d)\n", verbose);
+    SPRTF("\nUsing IOCTL to get raw drive information...(%d)\n", verbose);
     for (i = 0; i < 20; i++) {
         cp = GetNxtBuf();
         sprintf(cp,TEXT("\\\\.\\PhysicalDrive%u"),i);
@@ -516,25 +516,25 @@ void GetDriveGeometriesEx(void)
         if (bResult) {
             PDISK_GEOMETRY_EX pdgx = (PDISK_GEOMETRY_EX)pdg;
             PDISK_PARTITION_INFO pdpi = DiskGeometryGetPartition(pdgx);
-            printf("\nDrive: [%s]: %s ", cp, Media_Type_2_Stg(pdg->MediaType,0));
+            SPRTF("\nDrive: [%s]: %s ", cp, Media_Type_2_Stg(pdg->MediaType,0));
             //DiskSize = pdg->Cylinders.QuadPart * (ULONG)pdg->TracksPerCylinder *
             //    (ULONG)pdg->SectorsPerTrack * (ULONG)pdg->BytesPerSector;
             DiskSize = pdgx->DiskSize.QuadPart;
-            //printf("Size = %I64d (Bytes) = %I64d (Gb)\n", DiskSize,
+            //SPRTF("Size = %I64d (Bytes) = %I64d (Gb)\n", DiskSize,
             //    DiskSize / (1024 * 1024 * 1024));
             double sz = (double)pdgx->DiskSize.QuadPart;
             ul1.HighPart = pdgx->DiskSize.HighPart;
             ul1.LowPart  = pdgx->DiskSize.LowPart;
-            printf("Size = %s Bytes, %s\n",
+            SPRTF("Size = %s Bytes, %s\n",
                 get_comma_sep_number_padded(ul1, 20),
                 get_k_num64(ul1) );
             //    DiskSize / (1024 * 1024 * 1024));
-            printf("Cylinders = %I64d, ", pdg->Cylinders);
-            printf("Tracks/cylinder = %ld, ", (ULONG) pdg->TracksPerCylinder);
-            printf("Sectors/track = %ld, ", (ULONG) pdg->SectorsPerTrack);
-            printf("Bytes/sector = %ld\n", (ULONG) pdg->BytesPerSector);
+            SPRTF("Cylinders = %I64d, ", pdg->Cylinders);
+            SPRTF("Tracks/cylinder = %ld, ", (ULONG) pdg->TracksPerCylinder);
+            SPRTF("Sectors/track = %ld, ", (ULONG) pdg->SectorsPerTrack);
+            SPRTF("Bytes/sector = %ld\n", (ULONG) pdg->BytesPerSector);
 
-            printf("Petition Style: [%s]\n", Partition_Style_2_Stg(pdpi->PartitionStyle,1));
+            SPRTF("Petition Style: [%s]\n", Partition_Style_2_Stg(pdpi->PartitionStyle,1));
             // IOCTL_DISK_GET_DRIVE_LAYOUT_EX
             PDRIVE_LAYOUT_INFORMATION_EX pdlox = (PDRIVE_LAYOUT_INFORMATION_EX)GetNxtBuf();
             ZeroMemory(pdlox, BUF_MAX);
@@ -554,7 +554,7 @@ void GetDriveGeometriesEx(void)
                    pb = (BYTE *)&pgpt->DiskId;
                    blen = sizeof(GUID);
                 }
-                printf("Sig [%s], with up to %d partitions...\n", Get_Hex_Stg(pb,blen), pdlox->PartitionCount );
+                SPRTF("Sig [%s], with up to %d partitions...\n", Get_Hex_Stg(pb,blen), pdlox->PartitionCount );
                 for (dwi = 0; dwi < pdlox->PartitionCount; dwi++)
                 {
                     pix = &pdlox->PartitionEntry[dwi];
@@ -563,7 +563,7 @@ void GetDriveGeometriesEx(void)
                     ul2.HighPart = pix->PartitionLength.HighPart;
                     ul2.LowPart  = pix->PartitionLength.LowPart;
                     if (ul2.QuadPart > 0) {
-                        printf("%u:%s: %s %s Bytes, Beg=%s (%u)\n", (dwi + 1),
+                        SPRTF("%u:%s: %s %s Bytes, Beg=%s (%u)\n", (dwi + 1),
                             Partition_Style_2_Stg(pix->PartitionStyle,0),
                             get_k_num64(ul2),
                             get_comma_sep_number_padded(ul2, 20),
@@ -576,22 +576,22 @@ void GetDriveGeometriesEx(void)
                 errb = GetNxtBuf();
                 dwLen = GetLastErrorMsg(errb,BUF_MAX-2,dwErr);
                 if (dwLen == -1)
-                    printf ("GetDriveLayoutEx: FAILED. Error %ld.\n", dwErr);
+                    SPRTF("GetDriveLayoutEx: FAILED. Error %ld.\n", dwErr);
                 else
-                    printf ("GetDriveLayoutEx: FAILED. Error [%s](%ld).\n", errb, dwErr);
+                    SPRTF("GetDriveLayoutEx: FAILED. Error [%s](%ld).\n", errb, dwErr);
             }
         } else {
             dwErr = GetLastError();
             errb = GetNxtBuf();
             dwLen = GetLastErrorMsg(errb,BUF_MAX-2,dwErr);
             if (dwLen == -1)
-                printf ("\nDrive: [%s] FAILED. Error %ld.\n", cp, dwErr);
+                SPRTF("\nDrive: [%s] FAILED. Error %ld.\n", cp, dwErr);
             else
-                printf ("\nDrive: [%s] FAILED. Error [%s](%ld).\n", cp, errb, dwErr);
+                SPRTF("\nDrive: [%s] FAILED. Error [%s](%ld).\n", cp, errb, dwErr);
 
             failed++;
             if (failed > 2) {
-                printf("loop %d of 20: Aborting on %d failures...\n", (i + 1), failed);
+                SPRTF("loop %d of 20: Aborting on %d failures...\n", (i + 1), failed);
                 break;
             }
         }

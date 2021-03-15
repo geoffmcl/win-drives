@@ -9,12 +9,15 @@
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
+#include "sprtf.hxx" // persistent LOG to APPDATA
 #include "drives_io.hxx"
 
 #define BUF_MAX     4096
 #define MAX_BUFS    128
 
+#ifndef _SPRTF_HXX_
 extern TCHAR * GetNxtBuf(void);
+#endif // #ifndef _SPRTF_HXX_
 extern TCHAR * get_comma_sep_number( ULARGE_INTEGER uli );
 extern TCHAR * get_comma_sep_number_padded( ULARGE_INTEGER uli, size_t min );
 extern TCHAR * get_d_num( double byts );

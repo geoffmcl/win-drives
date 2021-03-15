@@ -1,5 +1,6 @@
 # CMakeLists.txt generated 2016/09/01 16:02:22
-# by vcproj05.pl from C:\GTools\ConApps\drives\drives.sln
+# 2021/03/15 - add sprtf log
+# 2016/09/01 from vcproj05.pl, using C:\GTools\ConApps\drives\drives.sln
 
 # local CMake Scripts.
 # set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules )
@@ -70,8 +71,8 @@ endif ()
 # File dir [C:\GTools\ConApps\drives\], out [C:\GTools\ConApps\drives], rel = []
 set(name drives)
 set(dir src)
-set( ${name}_SRCS ${dir}/drives.cxx ${dir}/drives_io.cxx )
-set( ${name}_HDRS ${dir}/drives.hxx ${dir}/drives_io.hxx )
+set( ${name}_SRCS ${dir}/drives.cxx ${dir}/drives_io.cxx ${dir}/sprtf.cxx)
+set( ${name}_HDRS ${dir}/drives.hxx ${dir}/drives_io.hxx ${dir}/sprtf.hxx)
 add_executable( ${name} ${${name}_SRCS} ${${name}_HDRS} )
 if (add_LIBS)
 target_Link_libraries(${name} ${add_LIBS} )

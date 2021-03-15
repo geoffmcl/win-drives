@@ -9,7 +9,7 @@
 
 #include "drives.hxx" // includes "drives_io.hxx"
 #define MEOR    "\n"
-#define sprtf printf
+// #define sprtf printf
 #define StringCbPrintf sprintf_s
 
 int verbose = 0;
@@ -22,7 +22,7 @@ static double TotalBytes = 0.0;
 static double TotalFree = 0.0;
 static int TotalCount = 0;
 
-
+#ifndef _SPRTF_HXX_
 //#define BUF_MAX     4096  // was 264
 //#define MAX_BUFS    32
 static int iNextBuf = 0;
@@ -34,7 +34,7 @@ TCHAR * GetNxtBuf(void)
         iNextBuf = 0;
     return &_s_buffer[BUF_MAX * iNextBuf];
 }
-
+#endif // #ifndef _SPRTF_HXX_
 
 // get nice number (double)
 TCHAR * get_d_num( double byts )
@@ -199,8 +199,8 @@ DWORD show_logical_drives(void)
     while (test && curr) {
         if (curr & test) {
             if (count == 0)
-                printf("Drives: ");
-            printf("%c: ", letter);
+                SPRTF("Drives: ");
+            SPRTF("%c: ", letter);
             curr &= ~test;
             count++;
         }
@@ -208,18 +208,18 @@ DWORD show_logical_drives(void)
         letter++;
     }
     if (count) {
-        printf(" - %d drives...\n", count);
+        SPRTF(" - %d drives...\n", count);
     } else {
-        printf("ERROR: GetLogicalDrives FAILED!\n");
+        SPRTF("ERROR: GetLogicalDrives FAILED!\n");
     }
     if (verbose) {
         TCHAR * nb = GetNxtBuf();
         curr = GetLogicalDriveStrings(BUF_MAX, nb);
         if (curr) {
             curr = 0;
-            printf("DriveStrings: ");
+            SPRTF("DriveStrings: ");
             while (*nb) {
-                printf("%s ", nb);
+                SPRTF("%s ", nb);
                 curr++;
                 while (*nb) {
                     nb++;   // get to first null
@@ -227,10 +227,10 @@ DWORD show_logical_drives(void)
                 if (nb[1])
                     nb++;
             }
-            printf("- %ld drives.\n", curr);
+            SPRTF("- %ld drives.\n", curr);
         }
         else {
-            printf("GetLogicalDriveStrings(BUF_MAX, nb); FAILED\n");
+            SPRTF("ERROR: GetLogicalDriveStrings(BUF_MAX, nb); FAILED\n");
         }
     }
     return drvmask;
@@ -288,18 +288,18 @@ void GetDiskSpace( _TCHAR * ps )
        TotalFree  += TotalNumberOfFreeBytes.QuadPart;
        TotalCount++;
        if (verbose) {
-           sprtf( _T("Disk %s: %s") MEOR, ps, Get_Volume_Info(ps) );
+           SPRTF( _T("Disk %s: %s") MEOR, ps, Get_Volume_Info(ps) );
           StringCbPrintf(pb1, 256, _T("Total %s (%s bytes),") MEOR,
                 get_k_num64( TotalNumberOfBytes ),
                 get_comma_sep_number_padded(TotalNumberOfBytes,20) );
-          sprtf(pb1);
-          sprtf( _T("Free  %s (%s bytes).") MEOR,
+          SPRTF(pb1);
+          SPRTF( _T("Free  %s (%s bytes).") MEOR,
                 get_k_num64( TotalNumberOfFreeBytes ),
                 get_comma_sep_number_padded(TotalNumberOfFreeBytes,20) );
        } else {
-          sprtf( _T("Disk %s: "), ps );
-          sprtf( _T("Total %s, "), get_k_num64( TotalNumberOfBytes ));
-          sprtf( _T("Free  %s.") MEOR, get_k_num64( TotalNumberOfFreeBytes ) );
+          SPRTF( _T("Disk %s: "), ps );
+          SPRTF( _T("Total %s, "), get_k_num64( TotalNumberOfBytes ));
+          SPRTF( _T("Free  %s.") MEOR, get_k_num64( TotalNumberOfFreeBytes ) );
        }
       shwn++;
    }
@@ -315,28 +315,28 @@ void GetDiskSpace( _TCHAR * ps )
        TotalFree  += dwlfree;
        TotalCount++;
       if (verbose) {
-          sprtf( _T("Disk %s:") MEOR, ps );
-          //sprtf( _T("Total %lu bytes,") MEOR, dwlfree );
-          //sprtf( _T("Free  %lu bytes.") MEOR, dwltot );
-          //sprtf( _T("BPS:%u, SPC:%u, TOT:%u, FREE:%u.") MEOR,
+          SPRTF( _T("Disk %s:") MEOR, ps );
+          //SPRTF( _T("Total %lu bytes,") MEOR, dwlfree );
+          //SPRTF( _T("Free  %lu bytes.") MEOR, dwltot );
+          //SPRTF( _T("BPS:%u, SPC:%u, TOT:%u, FREE:%u.") MEOR,
           //   BytesPerSector, SectorsPerCluster, TotalNumberOfClusters, NumberOfFreeClusters );
-          sprtf( _T("Total %s (%s bytes),") MEOR,
+          SPRTF( _T("Total %s (%s bytes),") MEOR,
              get_d_num( dwltot ),
              comma_sep_number_string(get_trim_float(dwltot)) );
-          sprtf( _T("Free  %s (%s bytes).") MEOR,
+          SPRTF( _T("Free  %s (%s bytes).") MEOR,
              get_d_num( dwlfree ),
              comma_sep_number_string(get_trim_float(dwlfree)) );
       } else {
-          sprtf( _T("Disk %s: "), ps );
-          sprtf( _T("Total %s, "), get_d_num( dwltot ));
-          sprtf( _T("Free  %s.") MEOR,
+          SPRTF( _T("Disk %s: "), ps );
+          SPRTF( _T("Total %s, "), get_d_num( dwltot ));
+          SPRTF( _T("Free  %s.") MEOR,
              get_d_num( dwlfree ) );
       }
       shwn++;
    }
    
    if( !shwn && verbose ) {
-      sprtf( _T("Disk %s: FAILED TO GET VALUES") MEOR, ps );
+      SPRTF( _T("Disk %s: FAILED TO GET VALUES") MEOR, ps );
    }
    SetErrorMode(ui);
 }
@@ -354,7 +354,7 @@ void show_version( char * name )
     }
     nb = GetNxtBuf();
     strcpy(nb,&name[off]);
-    printf("%s: Compiled on [%s], at [%s]\n",
+    SPRTF("%s: Compiled on [%s], at [%s]\n",
         nb, __DATE__, __TIME__ );
 }
 
@@ -373,8 +373,10 @@ int is_all_nums( char * arg )
 
 void show_help()
 {
-    printf("drives: Show valid drives...\n");
+    char* log = get_log_file();
+    printf("drives: Show valid logical drives... A...Z\n");
     printf("Only option is -v[n] to show more information.\n");
+    printf("Output written to '%s' log.\n", log ? log : "Not Available");
 }
 
 int main(int argc, char * argv[])
@@ -383,6 +385,8 @@ int main(int argc, char * argv[])
         int i;
         for (i = 1; i < argc; i++) {
             char * arg = argv[i];
+            if ((strcmp(arg, "--version") == 0) || (strcmp(arg, "--help") == 0))
+                goto help;
             if (*arg == '-') {
                 arg++;
                 if (*arg == 'v') {
@@ -399,6 +403,8 @@ int main(int argc, char * argv[])
                         verbose++;
                     }
                 } else if ((*arg == '?') || (*arg == 'h')) {
+help:
+                    show_version(argv[0]);
                     show_help();
                     return 0;
 
@@ -412,8 +418,8 @@ Bad_Param:
             }
         }
     }
-    if (verbose)
-        show_version( argv[0] );
+    //if (verbose)
+    //    show_version( argv[0] );
 
     if (show_logical_drives()) {
         DWORD mask = drvmask;
@@ -432,7 +438,7 @@ Bad_Param:
             letter++;
         }
         if (verbose) {
-            printf( "Drives %d: Total %s, Free %s\n", TotalCount,
+            SPRTF( "Drives %d: Total %s, Free %s\n", TotalCount,
                 get_d_num( TotalBytes ),
                 get_d_num( TotalFree ) ); 
         }
